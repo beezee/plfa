@@ -164,9 +164,8 @@ identityʳ (suc m) =
 +-comm' m zero rewrite +-identity' m = refl
 +-comm' m (suc n) rewrite +-suc' m n | +-comm' m n = refl
 
-+-swap : ∀ (m n p : ℕ) → m + (n + p) ≡ (m + n) + p
-+-swap zero n p = refl
-+-swap (suc m) n p rewrite +-assoc m n p = refl
++-swap : ∀ (m n p : ℕ) → m + (n + p) ≡ n + (m + p)
++-swap m n p rewrite sym (+-assoc m n p) | +-comm' m n | +-assoc n m p = refl
 
 *-distrib-+ : ∀ (m n p : ℕ) → (m + n) * p ≡ (m * p) + (n * p)
 *-distrib-+ zero n p = refl
@@ -174,4 +173,70 @@ identityʳ (suc m) =
 
 *-assoc : ∀ (m n p : ℕ) → (m * n) * p ≡ m * (n * p)
 *-assoc zero n p = refl
-*-assoc (suc m) n p rewrite *-assoc m n p | *-distrib-+ n (m * n) p | *-assoc m n p = refl
+*-assoc (suc m) n p rewrite *-distrib-+ n (m * n) p | *-assoc m n p = refl
+
+*-zap : ∀ (m : ℕ) → (m * zero) ≡ zero
+*-zap zero = refl
+*-zap (suc m) rewrite *-zap m = refl
+
+*-identity : ∀ (m : ℕ) → (m * 1) ≡ m
+*-identity zero = refl
+*-identity (suc m) rewrite *-identity m = refl
+
+*-suc : ∀ (m n : ℕ) → m * suc n ≡ m + (m * n)
+*-suc zero n = refl
+*-suc (suc m) n rewrite *-suc m n | +-swap m n (m * n) = refl
+
+*-comm : ∀ (m n : ℕ) → (m * n) ≡ (n * m)
+*-comm zero n rewrite *-zap n = refl
+*-comm (suc m) n rewrite *-suc n m | *-comm m n = refl
+
+monus-zero : ∀ (n : ℕ) → 0 ∸ n ≡ 0
+monus-zero zero = refl
+monus-zero (suc n) = refl
+
+∸-+-assoc : ∀ (m n p : ℕ) → m ∸ n ∸ p ≡ m ∸ (n + p)
+∸-+-assoc m zero p = refl
+∸-+-assoc zero (suc n) p rewrite monus-zero p = refl
+∸-+-assoc (suc m) (suc n) p rewrite ∸-+-assoc m n p = refl
+
+_^_ : ℕ → ℕ → ℕ
+n ^ suc m = n * (n ^ m)
+n ^ zero = 1
+
+coproduct-nat : ∀ (m n p : ℕ) → m ^ (n + p) ≡ (m ^ n) * (m ^ p)
+coproduct-nat m zero p rewrite +-identity' (m ^ p) = refl
+coproduct-nat m (suc n) p rewrite cong (m *_) (coproduct-nat m n p) | sym (*-assoc m (m ^ n) (m ^ p)) = refl
+
+product-nat : ∀ (m n p : ℕ) → (m * n) ^ p ≡ (m ^ p) * (n ^ p)
+product-nat m n zero = refl
+product-nat m n (suc p) rewrite cong ((m * n) *_) (product-nat m n p)
+                            | *-assoc m (m ^ p) (n * (n ^ p))
+                            | sym (*-assoc (m ^ p) n (n ^ p))
+                            | *-comm (m ^ p) n
+                            | sym (*-assoc m (n * (m ^ p)) (n ^ p))
+                            | sym (*-assoc m n (m ^ p))
+                            | *-assoc (m * n) (m ^ p) (n ^ p) = refl
+
+!-nat : ∀ (m : ℕ) → 1 ^ m ≡ 1
+!-nat zero = refl
+!-nat (suc m) rewrite +-identity' (1 ^ m) | !-nat m = refl
+
+void-suc : ∀ (m : ℕ) → 0 ^ suc m ≡ 0
+void-suc m = refl
+
+curry-nat : ∀ (m n p : ℕ) → m ^ (n * p) ≡ (m ^ n) ^ p
+curry-nat m n zero rewrite *-zap n = refl
+curry-nat m n (suc p) = begin
+    m ^ (n * suc p)
+  ≡⟨ cong (m ^_) (*-comm n (suc p)) ⟩
+    m ^ (suc p * n)
+  ≡⟨⟩
+    m ^ (n + (p * n))
+  ≡⟨ cong (m ^_) (cong (n +_) (*-comm p n)) ⟩
+    m ^ (n + (n * p))
+  ≡⟨ coproduct-nat m n (n * p) ⟩
+    m ^ n * m ^ (n * p)
+  ≡⟨ cong (m ^ n *_) (curry-nat m n p) ⟩
+    (m ^ n) * ((m ^ n) ^ p)
+  ∎
