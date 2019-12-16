@@ -239,4 +239,6 @@ curry-nat m n (suc p) = begin
     m ^ n * m ^ (n * p)
   ≡⟨ cong (m ^ n *_) (curry-nat m n p) ⟩
     (m ^ n) * ((m ^ n) ^ p)
+  ≡⟨⟩
+    (m ^ n) ^ suc p
   ∎
