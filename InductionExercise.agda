@@ -242,3 +242,34 @@ curry-nat m n (suc p) = begin
   ≡⟨⟩
     (m ^ n) ^ suc p
   ∎
+
+data Bin : Set where
+  ⟨⟩ : Bin
+  _O : Bin → Bin
+  _I : Bin → Bin
+
+inc : Bin → Bin
+inc ⟨⟩ = ⟨⟩ I
+inc (b O) = b I
+inc (b I) = (inc b) O
+
+to : ℕ → Bin
+to zero = ⟨⟩
+to (suc b) = inc (to b)
+
+from : Bin → ℕ
+from ⟨⟩ = zero
+from (b O) = 2 * (from b)
+from (b I) = 1 + 2 * (from b)
+
+x : ∀ (b : Bin) → from (inc b) ≡ suc (from b)
+x ⟨⟩ = refl
+x (b O) = refl
+x (b I) rewrite +-identity' (from (inc b))
+                            | +-identity' (from b)
+                            | x b
+                            | cong (suc) (+-suc (from b) (from b)) = refl
+
+y : ∀ (n : ℕ) → from (to n) ≡ n
+y zero = refl
+y (suc n) rewrite x (to n) | cong (suc) (y n) = refl
