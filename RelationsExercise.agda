@@ -1,7 +1,7 @@
 import Relation.Binary.PropositionalEquality as Eq
-open Eq using (_≡_; refl; cong)
+open Eq using (_≡_; refl; cong; sym)
 open import Data.Nat using (ℕ; zero; suc; _+_; _*_)
-open import Data.Nat.Properties using (+-comm; *-comm)
+open import Data.Nat.Properties using (+-comm; *-comm; +-suc; +-identityʳ)
 
 data _≤_ : ℕ → ℕ → Set where
   z≤n : ∀ {n : ℕ}
@@ -199,3 +199,10 @@ data Trichotomy (m n : ℕ) : Set where
 ...                                 | forward mn = forward (s<s mn)
 ...                                 | flipped mn = flipped (s<s mn)
 ...                                 | equal mn = equal (≡-suc mn)
+
+<-mono-+ : ∀ (m n p : ℕ)
+    → m < n
+      -------------
+    → (m + p) < (n + p)
+<-mono-+ m n zero mn rewrite +-identityʳ m | +-identityʳ n = mn
+<-mono-+ m n (suc p) mn rewrite +-suc m p | +-suc n p = s<s (<-mono-+ m n p mn)
