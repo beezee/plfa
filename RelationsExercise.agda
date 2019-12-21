@@ -214,3 +214,42 @@ data Trichotomy (m n : ℕ) : Set where
   → m < p
 <-trans' z<n (s<s np) = z<n
 <-trans' (s<s mn) (s<s np) = s<s (<-trans' mn np)
+
+data even : ℕ → Set
+data odd : ℕ → Set
+
+data even where
+
+  zero :
+      ---------
+      even zero
+
+  suc : ∀ {n : ℕ}
+    → odd n
+      -----------
+    → even (suc n)
+
+data odd where
+
+  suc : ∀ {n : ℕ}
+    → even n
+      -----------
+    → odd (suc n)
+
+e+e≡e : ∀ {m n : ℕ}
+    → even m
+    → even n
+      -----------
+    → even (m + n)
+
+o+e≡o : ∀ {m n : ℕ}
+    → odd m
+    → even n
+      -----------
+    → odd (m + n)
+
+e+e≡e {m} em zero rewrite +-identityʳ m = em
+e+e≡e zero (suc x) = suc x
+e+e≡e (suc x₁) (suc x) = suc (o+e≡o x₁ (suc x))
+
+o+e≡o (suc x) en = suc (e+e≡e x en)
