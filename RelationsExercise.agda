@@ -206,3 +206,11 @@ data Trichotomy (m n : ℕ) : Set where
     → (m + p) < (n + p)
 <-mono-+ m n zero mn rewrite +-identityʳ m | +-identityʳ n = mn
 <-mono-+ m n (suc p) mn rewrite +-suc m p | +-suc n p = s<s (<-mono-+ m n p mn)
+
+<-trans' : ∀ {m n p : ℕ}
+  → m < n
+  → n < p
+    -----
+  → m < p
+<-trans' z<n (s<s np) = z<n
+<-trans' (s<s mn) (s<s np) = s<s (<-trans' mn np)
