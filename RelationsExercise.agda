@@ -27,6 +27,13 @@ inv-z≤n : ∀ {n : ℕ}
   → n ≡ zero
 inv-z≤n z≤n = refl
 
+≤-suc : ∀ {m n : ℕ}
+  → suc m ≤ n
+    ---------
+  → m ≤ n
+≤-suc {zero} (s≤s smn) = z≤n
+≤-suc {suc m} (s≤s smn) = s≤s (≤-suc smn)
+
 ≤-refl : ∀ {n : ℕ}
   -------
   → n ≤ n
@@ -116,3 +123,79 @@ data Total (m n : ℕ) : Set where
     -------------
   → m * p ≤ n * q
 *-mono-≤ m n p q mn pq = ≤-trans (*-monoˡ-≤ m n p mn) (*-monoʳ-≤ p q n pq)
+
+data _<_ : ℕ → ℕ → Set where
+  z<n : ∀ {n : ℕ}
+     ----------
+   → zero < suc n
+
+  s<s : ∀ {m n : ℕ}
+   → m < n
+     -------------
+   → suc m < suc n
+
+inv-s<s : ∀ {m n : ℕ}
+  → suc m < suc n
+    -------------
+  → m < n
+inv-s<s (s<s smn) = smn
+
+<-suc : ∀ (n : ℕ)
+      -------
+    → n < suc n
+<-suc zero = z<n
+<-suc (suc n) = s<s (<-suc n)
+
+suc-≤-< : ∀ (m n : ℕ)
+  → suc m ≤ n
+    ---------
+  → m < n
+suc-≤-< zero (suc n) smn = z<n
+suc-≤-< (suc m) (suc n) smn = s<s (suc-≤-< m n (inv-s≤s smn))
+
+<-≤-suc : ∀ (m n : ℕ)
+  → m < n
+    ---------
+  → suc m ≤ n
+<-≤-suc zero (suc n) mn = s≤s z≤n
+<-≤-suc (suc m) (suc n) mn = s≤s (<-≤-suc m n (inv-s<s mn))
+
+<-trans : ∀ (m n p : ℕ)
+  → m < n
+  → n < p
+    -----
+  → m < p
+<-trans m n p mn np = suc-≤-< m p (≤-trans (<-≤-suc m n mn) (≤-suc (<-≤-suc n p np)))
+
+data Trichotomy (m n : ℕ) : Set where
+
+  forward :
+      m < n
+      -----
+    → Trichotomy m n
+
+  flipped :
+      n < m
+      -----
+    → Trichotomy m n
+
+  equal :
+      n ≡ m
+      -----
+    → Trichotomy m n
+
+≡-suc : ∀ {m n : ℕ}
+    → m ≡ n
+      -----
+    → (suc m) ≡ (suc n)
+≡-suc {zero} {zero} mn = refl
+≡-suc {suc m} {suc n} mn = cong suc mn
+
+<-trichotomy : ∀ (m n : ℕ) → Trichotomy m n
+<-trichotomy zero zero = equal refl
+<-trichotomy zero (suc n) = forward z<n
+<-trichotomy (suc m) zero = flipped z<n
+<-trichotomy (suc m) (suc n) with <-trichotomy m n
+...                                 | forward mn = forward (s<s mn)
+...                                 | flipped mn = flipped (s<s mn)
+...                                 | equal mn = equal (≡-suc mn)
