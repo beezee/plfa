@@ -253,3 +253,11 @@ e+e≡e zero (suc x) = suc x
 e+e≡e (suc x₁) (suc x) = suc (o+e≡o x₁ (suc x))
 
 o+e≡o (suc x) en = suc (e+e≡e x en)
+
+o+o≡e : ∀ {m n : ℕ}
+    → odd m
+    → odd n
+      -----------
+    → even (m + n)
+o+o≡e (suc zero) on = suc on
+o+o≡e (suc (suc om)) on = suc (suc (o+o≡e om on))
