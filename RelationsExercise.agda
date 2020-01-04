@@ -1,7 +1,8 @@
 import Relation.Binary.PropositionalEquality as Eq
 open Eq using (_≡_; refl; cong; sym)
+open Eq.≡-Reasoning using (begin_; _≡⟨⟩_; _≡⟨_⟩_; _∎)
 open import Data.Nat using (ℕ; zero; suc; _+_; _*_)
-open import Data.Nat.Properties using (+-comm; *-comm; +-suc; +-identityʳ)
+open import Data.Nat.Properties using (+-comm; *-comm; +-assoc; +-suc; +-identityʳ; *-identityˡ)
 
 data _≤_ : ℕ → ℕ → Set where
   z≤n : ∀ {n : ℕ}
@@ -261,3 +262,100 @@ o+o≡e : ∀ {m n : ℕ}
     → even (m + n)
 o+o≡e (suc zero) on = suc on
 o+o≡e (suc (suc om)) on = suc (suc (o+o≡e om on))
+
+data Bin : Set where
+  ⟨⟩ : Bin
+  _O : Bin → Bin
+  _I : Bin → Bin
+
+inc : Bin → Bin
+inc ⟨⟩ = ⟨⟩ I
+inc (b O) = b I
+inc (b I) = (inc b) O
+
+to : ℕ → Bin
+to zero = ⟨⟩
+to (suc b) = inc (to b)
+
+from : Bin → ℕ
+from ⟨⟩ = zero
+from (b O) = 2 * (from b)
+from (b I) = 1 + 2 * (from b)
+
+data One : Bin → Set
+data Can : Bin → Set
+
+data One where
+
+  one :
+      ----------
+      One (⟨⟩ I)
+
+  oneAfter : ∀ {b : Bin}
+    → One b
+      -------
+    → One (b I)
+
+  zeroAfter : ∀ {b : Bin}
+    → One b
+      -------
+    → One (b O)
+
+data Can where
+
+  zero :
+      --------
+      Can ⟨⟩
+
+  one : ∀ {b : Bin}
+    → One b
+      -------
+    → Can b
+
+one-inc : ∀ {b : Bin}
+    → One b
+      -----------
+    → One (inc b)
+one-inc one = zeroAfter one
+one-inc (oneAfter ob) = zeroAfter (one-inc ob)
+one-inc (zeroAfter ob) = oneAfter ob
+
+can-inc : ∀ {b : Bin}
+  → Can b
+    -----------
+  → Can (inc b)
+can-inc zero = one one
+can-inc (one one) = one (zeroAfter one)
+can-inc (one (oneAfter x)) = one (zeroAfter (one-inc x))
+can-inc (one (zeroAfter x)) = one (oneAfter x)
+
+can-to : ∀ (n : ℕ)
+    --------
+  → Can (to n)
+can-to zero = zero
+can-to (suc n) = can-inc (can-to n)
+
+*-zap : ∀ (m : ℕ) → (m * zero) ≡ zero
+*-zap zero = refl
+*-zap (suc m) rewrite *-zap m = refl
+
+
+can-to-from : ∀ {b : Bin}
+  → Can b
+    ---------
+  → to (from b) ≡ b
+can-to-from {.⟨⟩} zero = refl
+can-to-from {.(⟨⟩ I)} (one one) = refl
+can-to-from {b I} (one (oneAfter x)) =
+  begin
+    to (from (b I))
+  ≡⟨⟩
+    to (1 + 2 * from b)
+  ≡⟨⟩
+    inc (to (2 * from b))
+  ≡⟨⟩
+    ?
+  ≡⟨⟩
+    b I
+  ∎
+can-to-from {b} (one (zeroAfter x)) = {!   !}
