@@ -1,7 +1,10 @@
 module plfa.Equality where
 
+open import Level using (Level; _⊔_) renaming (zero to lzero; suc to lsuc)
+
 data _≡_ {A : Set} (x : A): A -> Set where
   refl : x ≡ x
+{-# BUILTIN EQUALITY _≡_ #-}
 
 infix 4 _≡_
 
@@ -116,6 +119,10 @@ postulate
   ≡⟨ cong (suc) (+-comm x y) ⟩
     suc (y + x)
   ∎
+
++-comm' : ∀ (m n : ℕ) → m + n ≡ n + m
++-comm' zero n rewrite +-identity n = refl
++-comm' (suc m) n rewrite +-suc n m | +-comm' m n = refl
 
 data _≤_ : ℕ → ℕ → Set where
   z≤n : ∀ {n : ℕ}
@@ -245,3 +252,103 @@ module ≤-Reasoning where
     ≤-∎
 
 open ≤-Reasoning
+
+data even : ℕ → Set
+data odd : ℕ → Set
+
+data even where
+
+  even-zero : even zero
+
+  even-suc : ∀ {n : ℕ}
+    → odd n
+      ------------
+    → even (suc n)
+
+data odd where
+
+  odd-suc : ∀ {n : ℕ}
+    → even n
+      -----------
+    → odd (suc n)
+
+even-comm : ∀ {m n : ℕ}
+  → even (m + n)
+    ------------
+  → even (n + m)
+even-comm {m} {n} emn rewrite +-comm n m = emn
+
+even-comm' : ∀ {m n : ℕ}
+  → even (m + n)
+    ------------
+  → even (n + m)
+even-comm' {m} {n} emn with m + n | +-comm m n
+...                     | .(n + m) | refl = emn
+
+even-comm″ : ∀ {m n : ℕ}
+  → even (m + n)
+    ------------
+  → even (n + m)
+even-comm″ {m} {n} = subst even (+-comm m n)
+
+_≐_ : ∀ {A : Set} (x y : A) → Set₁
+_≐_ {A} x y = ∀ (P : A → Set) → P x → P y
+
+refl-≐ : ∀ {A : Set} {x : A}
+  → x ≐ x
+refl-≐ {x} P Px = Px
+
+trans-≐ : ∀ {A : Set} {x y z : A}
+  → x ≐ y
+  → y ≐ z
+    -----
+  → x ≐ z
+trans-≐ {A} xy yz P Px = yz P (xy P Px)
+
+sym-≐ : ∀ {A : Set} {x y : A}
+  → x ≐ y
+    -----
+  → y ≐ x
+sym-≐ {A} {x} {y} xy P = Qy
+  where
+    Q : A → Set
+    Q z = P z → P x
+    Qx : Q x
+    Qx = refl-≐ P
+    Qy : Q y
+    Qy = xy Q Qx
+
+≡-implies-≐ : ∀ {A : Set} {x y : A}
+  → x ≡ y
+    -----
+  → x ≐ y
+≡-implies-≐ xy P = subst P xy
+
+≐-implies-≡ : ∀ {A : Set} {x y : A}
+  → x ≐ y
+    -----
+  → x ≡ y
+≐-implies-≡ {A} {x} {y} xy = Py
+    where
+      P : A → Set
+      P a = x ≡ a
+      Px : x ≡ x
+      Px = refl
+      Py : x ≡ y
+      Py = xy P Px
+
+data _≡′_ {ℓ : Level} {A : Set ℓ} (x : A) : A → Set ℓ where
+    refl′ : x ≡′ x
+
+sym-≡′ : ∀ {ℓ : Level} {A : Set ℓ} {x y : A}
+  → x ≡′ y
+    -----
+  → y ≡′ x
+sym-≡′ refl′ = refl′
+
+_≐′_ : ∀ {ℓ : Level} {A : Set ℓ} (x y : A) → Set (lsuc ℓ)
+_≐′_ {ℓ} {A} x y = ∀ (P : A → Set ℓ) → P x → P y
+
+_∘_ : ∀ {ℓ₁ ℓ₂ ℓ₃ : Level} {A : Set ℓ₁} {B : Set ℓ₂} {C : Set ℓ₃}
+  → (B → C) → (A → B) → (A → C)
+_∘_ bc ab a = bc (ab a)  
