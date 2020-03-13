@@ -261,18 +261,24 @@ binn ⟨⟩ = zero
 binn (b O) = 2 * (binn b)
 binn (b I) = 1 + 2 * (binn b)
 
-binn∘nbinn : ∀ {n : ℕ}
-    ------------------
-  → binn (nbin n) ≡ n
-binn∘nbinn {zero} = refl
-binn∘nbinn {suc n} with inc (nbin n)
-binn∘nbinn {suc n}    | (b O) = {!   !}
-binn∘nbinn {suc n}    | (b I) = {!   !}
++-suc : ∀ (m n : ℕ) → (m + suc n) ≡ suc (m + n)
++-suc zero n = refl
++-suc (suc m) n rewrite +-suc m n = refl
+
+binn∘inc : ∀{b : Bin} → binn (inc b) ≡ suc (binn b)
+binn∘inc {⟨⟩} = refl
+binn∘inc {b O} = refl
+binn∘inc {b I} rewrite binn∘inc {b} | +-suc (binn b) (binn b + 0) = refl
+
+binn∘nbin : ∀(n : ℕ) → binn (nbin n) ≡ n
+binn∘nbin zero = refl
+binn∘nbin (suc n) rewrite binn∘inc {nbin n} | binn∘nbin n = refl
+
 
 ℕ≤Bin : ℕ ≤ Bin
 ℕ≤Bin =
   record {
     to = nbin;
     from = binn;
-    from∘to = {!   !}
+    from∘to = binn∘nbin
   }

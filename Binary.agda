@@ -1,5 +1,5 @@
 import Relation.Binary.PropositionalEquality as Eq
-open Eq using (_≡_; refl)
+open Eq using (_≡_; refl; sym)
 open Eq.≡-Reasoning using (begin_; _≡⟨⟩_; _∎)
 open import Data.Nat using (ℕ; zero; suc; _+_; _*_; _∸_)
 
@@ -157,6 +157,23 @@ from : Bin → ℕ
 from ⟨⟩ = zero
 from (b O) = 2 * (from b)
 from (b I) = 1 + 2 * (from b)
+
++-suc : ∀ (m n : ℕ) → (m + suc n) ≡ suc (m + n)
++-suc zero n = refl
++-suc (suc m) n rewrite +-suc m n = refl
+
+from∘inc : ∀{b : Bin} → from (inc b) ≡ suc (from b)
+from∘inc {⟨⟩} = refl
+from∘inc {b O} = refl
+from∘inc {b I} rewrite from∘inc {b} | +-suc (from b) (from b + 0) = refl
+
+from∘to : ∀{n : ℕ} → from (to n) ≡ n
+from∘to {zero} = refl
+-- given to (suc n) ≡ inc (to n) and to (suc n) ≡ inc (to n)
+-- from (inc (to n)) ≡ suc n
+-- since
+-- from (inc (to n)) ≡ from (to (suc n)) ≡⟨ ind hyp ⟩ suc n
+from∘to {suc n} rewrite from∘inc {to n} | from∘to {n} = refl
 
 _ : (from (⟨⟩ O)) ≡ zero
 _ = refl
