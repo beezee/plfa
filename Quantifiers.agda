@@ -163,13 +163,10 @@ odd-∃ (suc x) with even-∃ x
 
 ∃-odd′ ⟨ m , refl ⟩ rewrite +1≡suc {m + (m + 0)} = suc (∃-even′ ⟨ m , refl ⟩)
 
-x≤x+y : ∀ {x y : ℕ} → x ≤ x + y
-x≤x+y {zero} {y} = z≤n
-x≤x+y {suc x} {y} = s≤s x≤x+y
-
 ∃-+-≤ : ∀ {y z : ℕ} → ∃[ x ] ( y + x ≡ z ) → y ≤ z
 ∃-+-≤ {y} {.(y + 0)} ⟨ zero , refl ⟩ rewrite +-identityʳ y = ≤-refl
-∃-+-≤ {y} {.(y + suc x)} ⟨ suc x , refl ⟩ = x≤x+y
+∃-+-≤ {zero} {.(suc x)} ⟨ suc x , refl ⟩ = z≤n
+∃-+-≤ {suc y} {.(suc (y + suc x))} ⟨ suc x , refl ⟩ = s≤s (∃-+-≤ {y} {y + suc x} ⟨ suc x , refl ⟩)
 
 ≤-+-∃ : ∀ {y z : ℕ} → y ≤ z → ∃[ x ] ( y + x ≡ z )
 ≤-+-∃ {.0} {z} z≤n = ⟨ z , +-identityˡ z ⟩
