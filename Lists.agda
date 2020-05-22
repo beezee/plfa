@@ -640,7 +640,8 @@ Any≃∃ = λ xs → record {
 
   to∘from : ∀ {A : Set} {P : A → Set} (xs : List A) → (e : ∃[ x ] (x ∈ xs × P x)) → to xs (from xs e) ≡ e
   to∘from (x :: xs) ⟨ fst , ⟨ here refl , snd ⟩ ⟩  = refl
-  to∘from (x :: xs) ⟨ fst , ⟨ there fst₁ , snd ⟩ ⟩ = cong (λ{ ⟨ x₁ , ⟨ x₂ , x₃ ⟩ ⟩ → ⟨ x₁ , ⟨ there x₂ , x₃ ⟩ ⟩ }) (to∘from xs ⟨ fst , ⟨ fst₁ , snd ⟩ ⟩)
+  to∘from (x :: xs) ⟨ fst , ⟨ there fst₁ , snd ⟩ ⟩ =
+    cong (λ{ ⟨ x₁ , ⟨ x₂ , x₃ ⟩ ⟩ → ⟨ x₁ , ⟨ there x₂ , x₃ ⟩ ⟩ }) (to∘from xs ⟨ fst , ⟨ fst₁ , snd ⟩ ⟩)
 
   from∘to : ∀ {A : Set} {P : A → Set} (xs : List A) → (a : Any P xs) → from xs (to xs a) ≡ a
   from∘to (x :: xs) (here x₁) = refl
