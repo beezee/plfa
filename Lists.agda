@@ -10,7 +10,7 @@ open import Data.Nat.Properties using
   (+-assoc; +-identityˡ; +-identityʳ; *-assoc; *-comm; *-identityˡ; *-identityʳ; *-distribʳ-+)
 open import Relation.Nullary using (¬_; Dec; yes; no)
 open import Data.Empty using (⊥-elim)
-open import Data.Product using (_×_; ∃; ∃-syntax) renaming (_,_ to ⟨_,_⟩)
+open import Data.Product using (_×_; ∃; ∃-syntax; proj₁; proj₂) renaming (_,_ to ⟨_,_⟩)
 open import Data.Sum using (_⊎_)
 open _⊎_
 open import Function using (_∘_)
@@ -619,3 +619,29 @@ All≃∀ xs = record {
   to∘from [] px = π-extensionality λ x → extensionality λ { () }
   to∘from (x :: xs) px rewrite to∘from xs (shrink-px x xs px) =
     π-extensionality λ x₁ → extensionality λ{ (here refl) → refl; (there x₂) → refl }
+
+Any≃∃ : ∀ {A : Set} {P : A → Set} (xs : List A) → Any P xs ≃ ∃[ x ] (x ∈ xs × P x)
+Any≃∃ = λ xs → record {
+  to = to xs ;
+  from = from xs ;
+  from∘to = from∘to xs ;
+  to∘from = to∘from xs }
+  where
+
+  to : ∀ {A : Set} {P : A → Set} (xs : List A) → Any P xs → ∃[ x ] (x ∈ xs × P x)
+  to (x :: xs) (here x₁) = ⟨ x , ⟨ (here refl) , x₁ ⟩ ⟩
+  to (x :: xs) (there px) with to xs px
+  to (x :: xs) (there px) | ⟨ fst , snd ⟩ = ⟨ fst , ⟨ there (proj₁ snd) , proj₂ snd ⟩ ⟩
+
+  from : ∀ {A : Set} {P : A → Set} (xs : List A) → ∃[ x ] (x ∈ xs × P x) → Any P xs
+  from (x :: xs) ⟨ fst , ⟨ here refl , snd ⟩ ⟩ = here snd
+  from (x :: xs) ⟨ fst , ⟨ there fst₁ , snd ⟩ ⟩ with from xs ⟨ fst , ⟨ fst₁ , snd ⟩ ⟩
+  ...                                            | z = there z
+
+  to∘from : ∀ {A : Set} {P : A → Set} (xs : List A) → (e : ∃[ x ] (x ∈ xs × P x)) → to xs (from xs e) ≡ e
+  to∘from (x :: xs) ⟨ fst , ⟨ here refl , snd ⟩ ⟩  = refl
+  to∘from (x :: xs) ⟨ fst , ⟨ there fst₁ , snd ⟩ ⟩ = cong (λ{ ⟨ x₁ , ⟨ x₂ , x₃ ⟩ ⟩ → ⟨ x₁ , ⟨ there x₂ , x₃ ⟩ ⟩ }) (to∘from xs ⟨ fst , ⟨ fst₁ , snd ⟩ ⟩)
+
+  from∘to : ∀ {A : Set} {P : A → Set} (xs : List A) → (a : Any P xs) → from xs (to xs a) ≡ a
+  from∘to (x :: xs) (here x₁) = refl
+  from∘to (x :: xs) (there a) = cong (λ x → there x) (from∘to xs a)
