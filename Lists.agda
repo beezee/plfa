@@ -646,3 +646,53 @@ Any≃∃ = λ xs → record {
   from∘to : ∀ {A : Set} {P : A → Set} (xs : List A) → (a : Any P xs) → from xs (to xs a) ≡ a
   from∘to (x :: xs) (here x₁) = refl
   from∘to (x :: xs) (there a) = cong (λ x → there x) (from∘to xs a)
+
+Decidable : ∀ {A : Set} → (A → Set) → Set
+Decidable {A} P = ∀ (x : A) → Dec (P x)
+
+all : ∀ {A : Set} → (A → Bool) → List A → Bool
+all pred = foldr _∧_ true ∘ map pred
+
+All? : ∀ {A : Set} {P : A → Set} → Decidable P → Decidable (All P)
+All? {A} {P} d [] = yes []
+All? {A} {P} d (x :: xs) with d x | All? d xs
+All? {A} {P} d (x :: xs) | yes p | yes p₁ = yes (p :: p₁)
+All? {A} {P} d (x :: xs) | yes p | no ¬p = no λ { (p₁ :: p₂) → ¬p p₂ }
+All? {A} {P} d (x :: xs) | no ¬p | z = no λ { (p₁ :: p₂) → ¬p p₁ }
+
+any : ∀ {A : Set} → (A → Bool) → List A → Bool
+any pred = foldr _∨_ false ∘ map pred
+
+Any? : ∀ {A : Set} {P : A → Set} → Decidable P → Decidable (Any P)
+Any? {A} {P} d [] = no λ { () }
+Any? {A} {P} d (x :: xs) with d x | Any? d xs
+Any? {A} {P} d (x :: xs) | yes p | _ = yes (here p)
+Any? {A} {P} d (x :: xs) | no ¬p | yes p = yes (there p)
+Any? {A} {P} d (x :: xs) | no ¬p | no ¬p₁ = no λ { (here x) → ¬p x; (there x) → ¬p₁ x }
+
+data merge {A : Set} : (xs ys zs : List A) → Set where
+  [] :
+      --------------
+      merge [] [] []
+
+  left-:: : ∀ {x xs ys zs}
+    → merge xs ys zs
+      ----------------------------
+    → merge (x :: xs) ys (x :: zs)
+
+  right-:: : ∀ {y xs ys zs}
+    → merge xs ys zs
+      ----------------------------
+    → merge xs (y :: ys) (y :: zs)
+
+_ : merge [ 1 , 4 ] [ 2 , 3 ] [ 1 , 2 , 3 , 4 ]
+_ = left-:: (right-:: (right-:: (left-:: [])))
+
+split : ∀ {A : Set} {P : A → Set} (P? : Decidable P) → (zs : List A)
+  → ∃[ xs ] ∃[ ys ] ( merge xs ys zs × All P xs × All (¬_ ∘ P) ys )
+split {A} {P} d [] = ⟨ [] , ⟨ [] , ⟨ [] , ⟨ [] , [] ⟩ ⟩ ⟩ ⟩
+split {A} {P} d (x :: zs) with d x | split d zs
+split {A} {P} d (x :: zs) | yes p | ⟨ fst , ⟨ fst₁ , ⟨ fst₂ , ⟨ fst₃ , snd ⟩ ⟩ ⟩ ⟩ =
+  ⟨ x :: fst , ⟨ fst₁ , ⟨ left-:: fst₂ , ⟨ p :: fst₃ , snd ⟩ ⟩ ⟩ ⟩
+split {A} {P} d (x :: zs) | no ¬p | ⟨ fst , ⟨ fst₁ , ⟨ fst₂ , ⟨ fst₃ , snd ⟩ ⟩ ⟩ ⟩ =
+  ⟨ fst , ⟨ x :: fst₁ , ⟨ right-:: fst₂ , ⟨ fst₃ , ¬p :: snd ⟩ ⟩ ⟩ ⟩
