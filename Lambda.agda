@@ -4,9 +4,10 @@ open import Relation.Binary.PropositionalEquality using (cong; _≡_; _≢_; ref
 open import Data.String using (String; _≟_)
 open import Data.Nat using (ℕ; zero; suc)
 open import Data.Empty using (⊥; ⊥-elim)
+open import Data.Product using (_×_) renaming (_,_ to ⟨_,_⟩)
 open import Relation.Nullary using (Dec; yes; no; ¬_)
 open import Data.List using (List; _∷_; [])
-open import plfa.Isomorphism using (_≤_)
+open import plfa.Isomorphism using (_≤_; _≃_)
 
 Id : Set
 Id = String
@@ -53,7 +54,7 @@ mul = μ "*" ⇒ ƛ "m" ⇒ ƛ "n" ⇒
 
 mulᶜ : Term
 mulᶜ = ƛ "m" ⇒ ƛ "n" ⇒ ƛ "s" ⇒ ƛ "z" ⇒
-          plusᶜ · ` "n" · ` "z" · (plusᶜ · ` "m") · ` "z"
+          plusᶜ · ` "n" · (ƛ "x" ⇒ ƛ "y" ⇒ ` "y") · (` "m" · ` "s") · ` "z"
 
 ƛ′_⇒_ : Term → Term → Term
 ƛ′ (` x) ⇒ N = ƛ x ⇒ N
@@ -353,3 +354,286 @@ _ = begin
   —→⟨ ξ-suc (ξ-suc β-zero) ⟩
      `suc (`suc (`suc (`suc `zero)))
   ∎
+
+_ : mulᶜ · twoᶜ · twoᶜ · sucᶜ · `zero —↠ `suc `suc `suc `suc `zero
+_ = begin
+    mulᶜ · twoᶜ · twoᶜ · sucᶜ · `zero
+  —→⟨ ξ-·₁ (ξ-·₁ (ξ-·₁ (β-ƛ V-ƛ))) ⟩
+    (ƛ "n" ⇒ ƛ "s" ⇒ ƛ "z" ⇒ plusᶜ · ` "n" · (ƛ "x" ⇒ ƛ "y" ⇒ ` "y") · (twoᶜ · ` "s") · ` "z") · twoᶜ · sucᶜ · `zero
+  —→⟨ ξ-·₁ (ξ-·₁ (β-ƛ V-ƛ)) ⟩
+    (ƛ "s" ⇒ ƛ "z" ⇒ plusᶜ · twoᶜ · (ƛ "x" ⇒ ƛ "y" ⇒ ` "y") · (twoᶜ · ` "s") · ` "z") · sucᶜ · `zero
+  —→⟨ ξ-·₁ (β-ƛ V-ƛ) ⟩
+    (ƛ "z" ⇒ plusᶜ · twoᶜ · (ƛ "x" ⇒ ƛ "y" ⇒ ` "y") · (twoᶜ · sucᶜ) · ` "z") · `zero
+  —→⟨ β-ƛ V-zero ⟩
+    plusᶜ · twoᶜ · (ƛ "x" ⇒ ƛ "y" ⇒ ` "y") · (twoᶜ · sucᶜ) · `zero
+  —→⟨ ξ-·₁ (ξ-·₁ (ξ-·₁ (β-ƛ V-ƛ))) ⟩
+    (ƛ "n" ⇒ ƛ "s" ⇒ ƛ "z" ⇒
+       twoᶜ · ` "s" · (` "n" · ` "s" · ` "z")) · (ƛ "x" ⇒ ƛ "y" ⇒ ` "y") · (twoᶜ · sucᶜ) · `zero
+  —→⟨ ξ-·₁ (ξ-·₁ (β-ƛ V-ƛ)) ⟩
+    (ƛ "s" ⇒ ƛ "z" ⇒
+       twoᶜ · ` "s" · ((ƛ "x" ⇒ ƛ "y" ⇒ ` "y") · ` "s" · ` "z")) · (twoᶜ · sucᶜ) · `zero
+  —→⟨ ξ-·₁ (ξ-·₂ (β-ƛ V-ƛ)) ⟩
+    (ƛ "s" ⇒ ƛ "z" ⇒
+       twoᶜ · ` "s" · ((ƛ "x" ⇒ ƛ "y" ⇒ ` "y") · ` "s" · ` "z")) · (ƛ "z" ⇒ sucᶜ · (sucᶜ · ` "z")) · `zero
+  —→⟨ ξ-·₁ (β-ƛ V-ƛ) ⟩
+    (ƛ "z" ⇒
+       twoᶜ · (ƛ "z" ⇒ sucᶜ · (sucᶜ · ` "z")) · ((ƛ "x" ⇒ ƛ "y" ⇒ ` "y") · (ƛ "z" ⇒ sucᶜ · (sucᶜ · ` "z")) · ` "z")) · `zero
+  —→⟨ β-ƛ V-zero ⟩
+    twoᶜ · (ƛ "z" ⇒ sucᶜ · (sucᶜ · ` "z")) · ((ƛ "x" ⇒ ƛ "y" ⇒ ` "y") · (ƛ "z" ⇒ sucᶜ · (sucᶜ · ` "z")) · `zero)
+  —→⟨ ξ-·₁ (β-ƛ V-ƛ) ⟩
+    (ƛ "z" ⇒ (ƛ "z" ⇒ sucᶜ · (sucᶜ · ` "z")) · ((ƛ "z" ⇒ sucᶜ · (sucᶜ · ` "z")) · ` "z")) · (
+        (ƛ "x" ⇒ ƛ "y" ⇒ ` "y") · (ƛ "z" ⇒ sucᶜ · (sucᶜ · ` "z")) · `zero)
+  —→⟨ ξ-·₂ (ξ-·₁ (β-ƛ V-ƛ)) ⟩
+    (ƛ "z" ⇒ (ƛ "z" ⇒ sucᶜ · (sucᶜ · ` "z")) · ((ƛ "z" ⇒ sucᶜ · (sucᶜ · ` "z")) · ` "z")) · (
+        (ƛ "y" ⇒ ` "y") · `zero)
+  —→⟨ ξ-·₂ (β-ƛ V-zero) ⟩
+    (ƛ "z" ⇒ (ƛ "z" ⇒ sucᶜ · (sucᶜ · ` "z")) · ((ƛ "z" ⇒ sucᶜ · (sucᶜ · ` "z")) · ` "z")) · `zero
+  —→⟨ β-ƛ V-zero ⟩
+    (ƛ "z" ⇒ sucᶜ · (sucᶜ · ` "z")) · ((ƛ "z" ⇒ sucᶜ · (sucᶜ · ` "z")) · `zero)
+  —→⟨ ξ-·₂ (β-ƛ V-zero) ⟩
+    (ƛ "z" ⇒ sucᶜ · (sucᶜ · ` "z")) · (sucᶜ · (sucᶜ · `zero))
+  —→⟨ ξ-·₂ (ξ-·₂ (β-ƛ V-zero)) ⟩
+    (ƛ "z" ⇒ sucᶜ · (sucᶜ · ` "z")) · (sucᶜ · (`suc `zero))
+  —→⟨ ξ-·₂ (β-ƛ (V-suc V-zero)) ⟩
+    (ƛ "z" ⇒ sucᶜ · (sucᶜ · ` "z")) · (`suc (`suc `zero))
+  —→⟨ β-ƛ (V-suc (V-suc V-zero)) ⟩
+    sucᶜ · (sucᶜ · (`suc (`suc `zero)))
+  —→⟨ ξ-·₂ (β-ƛ (V-suc (V-suc V-zero))) ⟩
+    sucᶜ · (`suc (`suc (`suc `zero)))
+  —→⟨ β-ƛ (V-suc (V-suc (V-suc V-zero))) ⟩
+    `suc (`suc (`suc (`suc `zero)))
+  ∎
+
+_ : plusᶜ · twoᶜ · twoᶜ · sucᶜ · `zero —↠ `suc `suc `suc `suc `zero
+_ = begin
+    plusᶜ · twoᶜ · twoᶜ · sucᶜ · `zero
+  —→⟨ ξ-·₁ (ξ-·₁ (ξ-·₁ (β-ƛ V-ƛ))) ⟩
+    (ƛ "n" ⇒ ƛ "s" ⇒ ƛ "z" ⇒
+       twoᶜ · ` "s" · (` "n" · ` "s" · ` "z")) · twoᶜ · sucᶜ · `zero
+  —→⟨ ξ-·₁ (ξ-·₁ (β-ƛ V-ƛ)) ⟩
+    (ƛ "s" ⇒ ƛ "z" ⇒
+       twoᶜ · ` "s" · (twoᶜ · ` "s" · ` "z")) · sucᶜ · `zero
+  —→⟨ ξ-·₁ (β-ƛ V-ƛ) ⟩
+    (ƛ "z" ⇒
+       twoᶜ · sucᶜ · (twoᶜ · sucᶜ · ` "z")) · `zero
+  —→⟨ β-ƛ V-zero ⟩
+    twoᶜ · sucᶜ · (twoᶜ · sucᶜ · `zero)
+  —→⟨ ξ-·₁ (β-ƛ V-ƛ) ⟩
+    (ƛ "z" ⇒ sucᶜ · (sucᶜ · ` "z")) · (twoᶜ · sucᶜ · `zero)
+  —→⟨ ξ-·₂ (ξ-·₁ (β-ƛ V-ƛ)) ⟩
+    (ƛ "z" ⇒ sucᶜ · (sucᶜ · ` "z")) · ((ƛ "z" ⇒ sucᶜ · (sucᶜ · ` "z"))  · `zero)
+  —→⟨ ξ-·₂ (β-ƛ V-zero) ⟩
+    (ƛ "z" ⇒ sucᶜ · (sucᶜ · ` "z")) · (sucᶜ · (sucᶜ · `zero))
+  —→⟨ ξ-·₂ (ξ-·₂ (β-ƛ V-zero) ) ⟩
+    (ƛ "z" ⇒ sucᶜ · (sucᶜ · ` "z")) · (sucᶜ · (`suc `zero))
+  —→⟨ ξ-·₂ (β-ƛ (V-suc V-zero)) ⟩
+    (ƛ "z" ⇒ sucᶜ · (sucᶜ · ` "z")) · (`suc `suc `zero)
+  —→⟨ β-ƛ (V-suc (V-suc V-zero)) ⟩
+    sucᶜ · (sucᶜ · (`suc `suc `zero))
+  —→⟨ ξ-·₂ (β-ƛ (V-suc (V-suc V-zero))) ⟩
+    sucᶜ · (`suc `suc `suc `zero)
+  —→⟨ β-ƛ (V-suc (V-suc (V-suc V-zero))) ⟩
+    `suc `suc `suc `suc `zero
+  ∎
+
+_ : plus · (`suc `zero) · (`suc `zero) —↠ `suc (`suc `zero)
+_ = begin
+    plus · (`suc `zero) · (`suc `zero)
+  —→⟨ ξ-·₁ (ξ-·₁ β-μ) ⟩
+      (ƛ "m" ⇒ ƛ "n" ⇒
+         case ` "m"
+           [zero⇒ ` "n"
+           |suc "m" ⇒ `suc (plus · ` "m" · ` "n")]) · (`suc `zero) · (`suc `zero)
+  —→⟨ ξ-·₁ (β-ƛ (V-suc V-zero)) ⟩
+      (ƛ "n" ⇒
+         case `suc `zero
+           [zero⇒ ` "n"
+           |suc "m" ⇒ `suc (plus · ` "m" · ` "n")]) · (`suc `zero)
+  —→⟨ β-ƛ (V-suc V-zero) ⟩
+       case `suc `zero
+         [zero⇒ `suc `zero
+         |suc "m" ⇒ `suc (plus · ` "m" · `suc `zero )]
+  —→⟨ β-suc ⟩
+       `suc (plus · `zero · `suc `zero)
+  —→⟨ ξ-suc (ξ-·₁ (ξ-·₁ β-μ)) ⟩
+      `suc ((ƛ "m" ⇒ ƛ "n" ⇒
+         case ` "m"
+           [zero⇒ ` "n"
+           |suc "m" ⇒ `suc (plus · ` "m" · ` "n")]) · `zero · `suc `zero)
+  —→⟨ ξ-suc (ξ-·₁ (β-ƛ V-zero)) ⟩
+      `suc ((ƛ "n" ⇒
+         case `zero
+           [zero⇒ ` "n"
+           |suc "m" ⇒ `suc (plus · ` "m" · ` "n")]) · `suc `zero)
+  —→⟨ ξ-suc (β-ƛ (V-suc V-zero)) ⟩
+      `suc (
+        case `zero
+           [zero⇒ `suc `zero
+           |suc "m" ⇒ `suc (plus · ` "m" · `suc `zero)])
+  —→⟨ ξ-suc β-zero ⟩
+      `suc (`suc `zero)
+  ∎
+
+infixr 7 _⇒_
+
+data Type : Set where
+  _⇒_ : Type → Type → Type
+  `ℕ : Type
+
+infixl 5 _,_∶_
+
+data Context : Set where
+ ∅ : Context
+ _,_∶_ : Context → Id → Type → Context
+
+Context-≃ : Context ≃ List (Id × Type)
+Context-≃ = record {
+  to = to;
+  from = from;
+  from∘to = from∘to ;
+  to∘from = to∘from }
+  where
+
+  to : Context → List (Id × Type)
+  to ∅ = []
+  to (c , x ∶ x₁) = ⟨ x , x₁ ⟩ ∷ (to c)
+
+  from : List (Id × Type) → Context
+  from [] = ∅
+  from (⟨ fst , snd ⟩ ∷ its) = (from its) , fst ∶ snd
+
+  from∘to : ∀ (a : Context) → from (to a) ≡ a
+  from∘to ∅ = refl
+  from∘to (a , x ∶ x₁) rewrite from∘to a = refl
+
+  to∘from : ∀ (its : List (Id × Type)) → to (from its) ≡ its
+  to∘from [] = refl
+  to∘from (⟨ fst , snd ⟩ ∷ its) rewrite to∘from its = refl
+
+infix 4 _∋_∶_
+
+data _∋_∶_ : Context → Id → Type → Set where
+  Z : ∀ {Γ x A}
+      -----------------
+    → Γ , x ∶ A ∋ x ∶ A
+
+  S : ∀ {Γ x y A B}
+    → x ≢ y
+    → Γ ∋ x ∶ A
+      ------------------
+    → Γ , y ∶ B ∋ x ∶ A
+
+infix 4 _⊢_∶_
+
+data _⊢_∶_ : Context → Term → Type → Set where
+  -- Axiom
+  ⊢` : ∀ {Γ x A}
+     → Γ ∋ x ∶ A
+       -----------
+     → Γ ⊢ ` x ∶ A
+
+  -- ⇒-I
+  ⊢ƛ : ∀ {Γ x N A B}
+     → Γ , x ∶ A ⊢ N ∶ B
+       ------------------
+     → Γ ⊢ ƛ x ⇒ N ∶ A ⇒ B
+
+  -- ⇒-E
+  _·_ : ∀ {Γ L M A B}
+      → Γ ⊢ L ∶ A ⇒ B
+      → Γ ⊢ M ∶ A
+        -------------
+      → Γ ⊢ L · M ∶ B
+
+  -- ℕ-I₁
+  ⊢zero : ∀ {Γ}
+          --------------
+        → Γ ⊢ `zero ∶ `ℕ
+
+  -- ℕ-I₂
+  ⊢suc : ∀ {Γ M}
+       → Γ ⊢ M ∶ `ℕ
+         ---------------
+       → Γ ⊢ `suc M ∶ `ℕ
+
+  -- ℕ-E
+  ⊢case : ∀ {Γ L M x N A}
+        → Γ ⊢ L ∶ `ℕ
+        → Γ ⊢ M ∶ A
+        → Γ , x ∶ `ℕ ⊢ N ∶ A
+          ------------------------------------
+        → Γ ⊢ case L [zero⇒ M |suc x ⇒ N ] ∶ A
+
+  ⊢μ : ∀ {Γ x M A}
+     → Γ , x ∶ A ⊢ M ∶ A
+       ------------------
+     → Γ ⊢ μ x ⇒ M ∶ A
+
+Ch : Type → Type
+Ch A = (A ⇒ A) ⇒ A ⇒ A
+
+⊢twoᶜ : ∀ {Γ A} → Γ ⊢ twoᶜ ∶ Ch A
+⊢twoᶜ = ⊢ƛ (⊢ƛ (⊢` ∋s · (⊢` ∋s · ⊢` ∋z)))
+  where
+  ∋s = S (λ()) Z
+  ∋z = Z
+
+⊢two : ∀ {Γ} → Γ ⊢ two ∶ `ℕ
+⊢two = ⊢suc (⊢suc ⊢zero)
+
+⊢plus : ∀ {Γ} → Γ ⊢ plus ∶ `ℕ ⇒ `ℕ ⇒ `ℕ
+⊢plus = ⊢μ (⊢ƛ (⊢ƛ (⊢case m n (⊢suc ((+ · m′) · n′)))))
+  where
+  m = ⊢` (S (λ()) Z)
+  n = ⊢` Z
+  + = ⊢` (S (λ()) ((S (λ()) ((S (λ()) Z )) )) )
+  m′ = ⊢` Z
+  n′ = ⊢` (S (λ()) Z)
+
+⊢2+2 : ∅ ⊢ plus · two · two ∶ `ℕ
+⊢2+2 = ⊢plus · ⊢two · ⊢two
+
+⊢plusᶜ : ∀ {Γ A} → Γ ⊢ plusᶜ ∶ Ch A ⇒ Ch A ⇒ Ch A
+⊢plusᶜ = ⊢ƛ (⊢ƛ (⊢ƛ (⊢ƛ (m · s · (n · s · z)) ) ) )
+  where
+  m = ⊢` (S (λ()) ((S (λ()) ((S (λ()) Z)) )) )
+  s = ⊢` (S (λ()) Z)
+  n = ⊢` (S (λ()) (S (λ()) Z))
+  z = ⊢` Z
+
+⊢sucᶜ : ∀ {Γ} → Γ ⊢ sucᶜ ∶ `ℕ ⇒ `ℕ
+⊢sucᶜ = ⊢ƛ (⊢suc (⊢` Z))
+
+⊢2+2ᶜ : ∅ ⊢ plusᶜ · twoᶜ · twoᶜ · sucᶜ · `zero ∶ `ℕ
+⊢2+2ᶜ = ⊢plusᶜ · ⊢twoᶜ · ⊢twoᶜ · ⊢sucᶜ · ⊢zero
+
+∋-injective : ∀ {Γ x A B} → Γ ∋ x ∶ A → Γ ∋ x ∶ B → A ≡ B
+∋-injective Z Z = refl
+∋-injective Z (S x xb) with x
+...                     | z = ⊥-elim (x refl)
+∋-injective (S x xa) Z with x
+...                     | z = ⊥-elim (x refl)
+∋-injective (S x xa) (S x₁ xb) = ∋-injective xa xb
+
+nope₁ : ∀ {A} → ¬ (∅ ⊢ `zero · `suc `zero ∶ A)
+nope₁ (() · _)
+
+nope₂ : ∀ {A} → ¬ (∅ ⊢ ƛ "x" ⇒ ` "x" · ` "x" ∶ A)
+nope₂ (⊢ƛ (⊢` x · ⊢` x₁)) with ∋-injective x x₁
+...                               | ()
+
+⊢mul : ∀ {Γ} → Γ ⊢ mul ∶ `ℕ ⇒ `ℕ ⇒ `ℕ
+⊢mul = ⊢μ (⊢ƛ (⊢ƛ (⊢case m ⊢zero (⊢plus · n · (* · m′ · n))) ) )
+  where
+  m = ⊢` (S (λ()) Z)
+  m′ = ⊢` Z
+  n = ⊢` (S (λ()) Z)
+  * = ⊢` (S (λ()) (S (λ()) (S (λ()) Z)))
+
+⊢mulᶜ : ∀ {Γ A} → Γ ⊢ mulᶜ ∶ Ch A ⇒ Ch A ⇒ Ch A
+⊢mulᶜ = ⊢ƛ (⊢ƛ (⊢ƛ (⊢ƛ (⊢plusᶜ · n · mz · ms · z) )))
+  where
+  n = ⊢` (S (λ()) ((S (λ()) Z)) )
+  mz = ⊢ƛ (⊢ƛ (⊢` Z ) )
+  ms = (⊢` ((S (λ()) (S (λ()) (S (λ()) Z)))) ) · ⊢` ((S (λ()) Z))
+  z = ⊢` Z

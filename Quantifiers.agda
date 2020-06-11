@@ -65,6 +65,10 @@ syntax Σ-syntax A (λ x → B) = Σ[ x ∈ A ] B
 ∃ : ∀ {A : Set} (B : A → Set) → Set
 ∃ {A} B = Σ A B
 
+∃-proj₁ : ∀{ A : Set} {B : A → Set} (eab : ∃ {A} B) → A
+∃-proj₁ ⟨ a , ba ⟩ = a
+
+
 ∃-syntax = ∃
 infix 2 ∃-syntax
 syntax ∃-syntax (λ x → B) = ∃[ x ] B
@@ -172,3 +176,118 @@ odd-∃ (suc x) with even-∃ x
 ≤-+-∃ {.0} {z} z≤n = ⟨ z , +-identityˡ z ⟩
 ≤-+-∃ {.(suc _)} {.(suc _)} (s≤s yz) with ≤-+-∃ yz
 ...                                   | ⟨ x , refl ⟩ = ⟨ x , refl ⟩
+
+¬∃≃∀¬ : ∀ {A : Set} {B : A → Set}
+  → ¬ (∃[ x ] ( B x )) ≃ ∀ x → ¬ B x
+¬∃≃∀¬ =
+    record {
+        to = λ ¬∃bx x bx → ¬∃bx ⟨ x , bx ⟩
+      ; from = λ{ ∀x¬bx ⟨ x , bx ⟩ → (∀x¬bx x) bx }
+      ; from∘to = λ{ ¬∃xy → π-extensionality λ{ ⟨ x , bx ⟩ → refl } }
+      ; to∘from = λ ∀¬xy → refl
+    }
+
+∃¬-implies-¬∀ : ∀ {A : Set} {B : A → Set}
+    → ∃[ x ] ( ¬ B x )
+      ----------------
+    → ¬ (∀ x → B x)
+∃¬-implies-¬∀ ⟨ x , ¬bx ⟩ xbx = ¬bx (xbx x)
+
+data Bin : Set where
+  ⟨⟩ : Bin
+  _O : Bin → Bin
+  _I : Bin → Bin
+
+inc : Bin → Bin
+inc ⟨⟩ = ⟨⟩ I
+inc (b O) = b I
+inc (b I) = (inc b) O
+
+to : ℕ → Bin
+to zero = ⟨⟩
+to (suc b) = inc (to b)
+
+from : Bin → ℕ
+from ⟨⟩ = zero
+from (b O) = 2 * (from b)
+from (b I) = 1 + 2 * (from b)
+
+data One : Bin → Set where
+
+  one :
+      ----------
+      One (⟨⟩ I)
+
+  oneAfter : ∀ {b : Bin}
+    → One b
+      -------
+    → One (b I)
+
+  zeroAfter : ∀ {b : Bin}
+    → One b
+      -------
+    → One (b O)
+
+data Can : Bin → Set where
+
+  zero :
+      --------
+      Can ⟨⟩
+
+  one : ∀ {b : Bin}
+    → One b
+      -------
+    → Can b
+
+postulate
+    from-to-n : ∀ {n : ℕ} → from (to n) ≡ n
+
+postulate
+  can-to-from : ∀ {b : Bin}
+    → Can b
+      ---------
+    → to (from b) ≡ b
+
+postulate
+  can-inc : ∀ {b : Bin} → Can b → Can (inc b)
+
+≡One : ∀ {b : Bin} (o o′ : One b) → o ≡ o′
+≡One {.(⟨⟩ I)} one one = refl
+≡One {.(_ I)} (oneAfter o) (oneAfter o′) with ≡One o o′
+...                                       | refl = refl
+≡One {.(_ O)} (zeroAfter o) (zeroAfter o′) with ≡One o o′
+...                                       | refl = refl
+
+≡Can : ∀ {b : Bin} → (cb cb′ : Can b) → cb ≡ cb′
+≡Can zero zero = refl
+≡Can (one x) (one x₁) with ≡One x x₁
+...                     | refl = refl
+
+∃-proj₁≡→Can≡ : {cb cb′ : ∃[ b ](Can b)} → ∃-proj₁ cb ≡ ∃-proj₁ cb′ → cb ≡ cb′
+∃-proj₁≡→Can≡ {⟨ b , cb ⟩ } {⟨ b′ , cb′ ⟩} refl with ≡Can cb cb′
+...                                               | refl = refl
+
+ℕ→Can : ∀ (n : ℕ) → ∃[ b ]( Can b )
+ℕ→Can zero = ⟨ to zero , zero ⟩
+ℕ→Can (suc n) with ℕ→Can n
+...                 | ⟨ (to n) , cb ⟩ = ⟨ inc b , can-inc cb ⟩
+
+Can→ℕ : ∀ {b : Bin} (cb : Can b) → ℕ
+Can→ℕ {b} cb = from b
+
+∃-proj₁∘ℕ→Can≡to : ∀{n : ℕ} → (∃-proj₁ ∘ ℕ→Can) n ≡ to n
+∃-proj₁∘ℕ→Can≡to {zero} = refl
+∃-proj₁∘ℕ→Can≡to {suc n} with ∃-proj₁∘ℕ→Can≡to {n}
+...                       | x = {!   !}
+
+from∘∃-proj₁∘ℕ→Can≡id : ∀{n : ℕ} → (from ∘ ∃-proj₁ ∘ ℕ→Can) n ≡ n
+from∘∃-proj₁∘ℕ→Can≡id {n} = {!   !}
+
+ℕ≃∃Can : ℕ ≃ ∃[ b ]( Can b )
+ℕ≃∃Can =
+    record {
+        to = ℕ→Can
+      ; from = λ{ ⟨ b , cb ⟩ → Can→ℕ cb }
+      ; from∘to = λ a → {!   !}
+      ; to∘from = {!   !}
+    }

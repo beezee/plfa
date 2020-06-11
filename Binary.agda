@@ -1,3 +1,5 @@
+module plfa.Binary where
+
 import Relation.Binary.PropositionalEquality as Eq
 open Eq using (_≡_; refl; sym)
 open Eq.≡-Reasoning using (begin_; _≡⟨⟩_; _∎)
